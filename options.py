@@ -1,11 +1,13 @@
-import numpy as np
 import argparse
-from enum import Enum
-from pydantic.dataclasses import dataclass
-from pydantic import TypeAdapter, ValidationError, ConfigDict
-from typing import Annotated
+import inspect
 import typing
+from enum import Enum
+from typing import Annotated
+
+import numpy as np
 from annotated_types import Ge, Le
+from pydantic import ConfigDict, TypeAdapter, ValidationError
+from pydantic.dataclasses import dataclass
 
 
 class LabeledIntEnum(Enum):
@@ -34,14 +36,6 @@ class TerminationCondition(LabeledIntEnum):
     ITERATIONS = (2, "Number of iterations")
 
 
-def enum_parser(enum_cls: type):
-    def parse_enum(value: str) -> enum_cls:
-        as_int = int(value)
-        return enum_cls(as_int)
-
-    return parse_enum
-
-
 NumThreads = Annotated[int, Ge(1), Le(1024)]
 NumInterlines = Annotated[int, Ge(0), Le(100_000)]
 TermIterations = Annotated[int, Ge(1), Le(200_000)]
@@ -59,6 +53,14 @@ class Options:
     term_accuracy: TermAccuracy | None
 
 
+def enum_parser(enum_cls: type):
+    def parse_enum(value: str) -> enum_cls:
+        as_int = int(value)
+        return enum_cls(as_int)
+
+    return parse_enum
+
+
 def annotated_parser(model):
     def parse(value: str):
         try:
@@ -69,6 +71,16 @@ def annotated_parser(model):
             raise ValueError() from e
 
     return parse
+
+
+def type_parser(cls):
+    if cls is None:
+        return None
+    if typing.get_origin(cls) == Annotated:
+        return annotated_parser(cls)
+    if inspect.isclass(cls) and issubclass(cls, Enum):
+        return enum_parser(cls)
+    assert False, "Unexpected type found"
 
 
 def parse_term_acc_iter(termination: TerminationCondition, value: str):
@@ -95,7 +107,7 @@ def enum_range(cls):
 def type_range(cls):
     if typing.get_origin(cls) == Annotated:
         return annotated_range(cls)
-    if issubclass(cls, Enum):
+    if inspect.isclass(cls) and issubclass(cls, Enum):
         return enum_range(cls)
     assert False, "Unexpected type found"
 
@@ -109,53 +121,67 @@ def help_for_enum(cls):
     return "\n".join(f"{choice.value}: {choice.label}" for choice in cls)
 
 
-def indent(lines: str):
-    return "\n".join(f"  {line}" for line in lines.split("\n"))
-
-
 def parse_args() -> Options:
+    def add_argument(parser, name, **kwargs):
+        type = kwargs.get("type", None)
+        help = kwargs.get("help", None)
+        assert help is not None
+        metavar = kwargs.get("metavar", name)
+        extra_help = kwargs.get("extra_help", None)
+        help_text = help
+        if type is not None:
+            help_text += f" ({display_range(type)})."
+        if inspect.isclass(type) and issubclass(type, Enum):
+            help_text += "\n" + help_for_enum(type)
+        if extra_help is not None:
+            help_text += "\n" + extra_help
+        help_text = help_text.split("\n")
+        help_text = [help_text[0], *[f"  {line}" for line in help_text[1:]]]
+        help_text = "\n".join(help_text)
+        parser.add_argument(
+            name,
+            metavar=metavar,
+            type=type_parser(type),
+            help=help_text,
+        )
+
     parser = argparse.ArgumentParser(
         "partdiff", formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument(
-        "num_threads",
-        metavar="num",
-        type=annotated_parser(NumThreads),
-        help=f"Number of threads ({display_range(NumThreads)}).",
+    add_argument(
+        parser, "num_threads", metavar="num", type=NumThreads, help="Number of threads"
     )
-    parser.add_argument(
-        "method",
-        metavar="method",
-        type=enum_parser(CalculationMethod),
-        help=f"Calculation method ({display_range(CalculationMethod)}).\n{indent(help_for_enum(CalculationMethod))}",
-    )
-    parser.add_argument(
+    add_argument(parser, "method", type=CalculationMethod, help="Calculation method")
+    add_argument(
+        parser,
         "interlines",
         metavar="lines",
-        type=annotated_parser(NumInterlines),
-        help=f"Number of interlines ({display_range(NumInterlines)}).\n{indent('matrixsize = (interlines * 8) + 9')}",
+        type=NumInterlines,
+        help="Number of interlines",
+        extra_help="matrixsize = (interlines * 8) + 9",
     )
-    parser.add_argument(
+    add_argument(
+        parser,
         "pert_func",
         metavar="func",
-        type=enum_parser(PerturbationFunction),
-        help=f"Perturbation function ({display_range(PerturbationFunction)}).\n{indent(help_for_enum(PerturbationFunction))}",
+        type=PerturbationFunction,
+        help="Perturbation function",
     )
-    parser.add_argument(
+    add_argument(
+        parser,
         "termination",
         metavar="term",
-        type=enum_parser(TerminationCondition),
-        help=f"Termination condition ({display_range(TerminationCondition)}).\n{indent(help_for_enum(TerminationCondition))}",
+        type=TerminationCondition,
+        help="Termination condition",
     )
-    parser.add_argument(
+    add_argument(
+        parser,
         "acc_iter",
         metavar="acc/iter",
-        help=(
-            "depending on term\n"
-            + indent(
-                f"accuracy: {display_range(TermAccuracy, '{:0.0e}')}\n"
-                f"iterations:   {display_range(TermIterations)}"
-            )
+        help="depending on term",
+        extra_help=(
+            f"accuracy: {display_range(TermAccuracy, '{:0.0e}')}\n"
+            f"iterations:   {display_range(TermIterations)}"
         ),
     )
     args = parser.parse_args()
