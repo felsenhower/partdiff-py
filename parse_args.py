@@ -9,6 +9,8 @@ from annotated_types import Ge, Le
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
 
+# f64 = np.float64
+
 
 class LabeledIntEnum(Enum):
     def __new__(cls, value: int, label: str):
@@ -39,10 +41,11 @@ class TerminationCondition(LabeledIntEnum):
 NumThreads = Annotated[int, Ge(1), Le(1024)]
 NumInterlines = Annotated[int, Ge(0), Le(100_000)]
 TermIterations = Annotated[int, Ge(1), Le(200_000)]
-TermAccuracy = Annotated[np.float64, Ge(1e-20), Le(1e-4)]
+TermAccuracy = Annotated[float, Ge(1e-20), Le(1e-4)]
 
 
-@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
+# @dataclass(frozen=True, config=ConfigDict(arbitrary_types_allowed=True))
+@dataclass(frozen=True)
 class Options:
     num_threads: NumThreads
     method: CalculationMethod
