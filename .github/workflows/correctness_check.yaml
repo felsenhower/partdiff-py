@@ -26,7 +26,7 @@ jobs:
       - name: Run correctness check
         run: |
           cd partdiff_tester && \
-          uv run pytest -n auto --verbose \
+          uv run pytest -n 4 --verbose \
             --executable='uv run main.py' \
             --cwd='../' \
             --strictness=4 \
