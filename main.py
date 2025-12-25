@@ -107,7 +107,7 @@ def calculate_gauss_seidel(
     perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
-    m1, m2 = (0, 1) if options.method == CalculationMethod.JACOBI else (0, 0)
+    matrix = tensor[0, :, :]
     finished = False
     while not finished:
         stat_iteration += 1
@@ -117,24 +117,23 @@ def calculate_gauss_seidel(
         for i in range(1, n):
             for j in range(1, n):
                 star = 0.25 * (
-                    tensor[m2, i - 1, j]
-                    + tensor[m2, i, j - 1]
-                    + tensor[m2, i, j + 1]
-                    + tensor[m2, i + 1, j]
+                    matrix[i - 1, j]
+                    + matrix[i, j - 1]
+                    + matrix[i, j + 1]
+                    + matrix[i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
                 if options.termination == TerminationCondition.ACCURACY or finished:
-                    residuum = abs(tensor[m2, i, j] - star)
+                    residuum = abs(matrix[i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
-                tensor[m1, i, j] = star
+                matrix[i, j] = star
         stat_accuracy = maxresiduum
-        (m1, m2) = (m2, m1)
         if options.termination == TerminationCondition.ACCURACY:
             if maxresiduum < options.term_accuracy:
                 finished = True
     end_time = time()
     duration = end_time - start_time
-    final_matrix = tensor[m2, :, :]
+    final_matrix = matrix
     return CalculationResults(final_matrix, stat_iteration, stat_accuracy, duration)
 
 
