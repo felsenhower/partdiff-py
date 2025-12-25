@@ -10,6 +10,7 @@ import numpy as np
 import sys
 from math import sin
 from time import time
+from pympler import asizeof
 
 
 @dataclass(frozen=True)
@@ -90,12 +91,22 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     return CalculationResults(m2, stat_iteration, stat_accuracy, duration)
 
 
+def calculate_memory_usage(
+    arguments: CalculationArguments, options: Options, results: CalculationResults
+) -> float:
+    memory_usage = 0
+    for o in (arguments, options, results):
+        memory_usage += asizeof.asizeof(o)
+    memory_usage = memory_usage / 1024.0 / 1024.0
+    return memory_usage
+
+
 def display_statistics(
     arguments: CalculationArguments, options: Options, results: CalculationResults
 ) -> None:
     N = arguments.N
     duration = results.duration
-    memory_usage = sys.getsizeof(arguments.M) / 1024.0 / 1024.0
+    memory_usage = calculate_memory_usage(arguments, options, results)
     print(f"Calculation time:       {duration:0.6f} s")
     print(f"Memory usage:           {memory_usage:0.6f} MiB")
     print(f"Calculation method:     {options.method}")
