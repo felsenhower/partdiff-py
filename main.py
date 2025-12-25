@@ -19,6 +19,7 @@ class CalculationArguments:
     num_matrices: int
     h: float
     M: np.ndarray
+    perturbation_matrix: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -33,7 +34,8 @@ def init_arguments(options: Options) -> CalculationArguments:
     N = (options.interlines * 8) + 9 - 1
     num_matrices = 2 if options.method == CalculationMethod.JACOBI else 1
     h = 1.0 / N
-    tensor_shape = (num_matrices, N + 1, N + 1)
+    matrix_shape = (N + 1, N + 1)
+    tensor_shape = (num_matrices, *matrix_shape)
     M = np.zeros(tensor_shape, dtype=np.float64)
     if options.pert_func == PerturbationFunction.F0:
         for g in range(num_matrices):
@@ -46,7 +48,16 @@ def init_arguments(options: Options) -> CalculationArguments:
                 M[g, N, i] = c2
             M[g, N, 0] = 0.0
             M[g, 0, N] = 0.0
-    return CalculationArguments(N, num_matrices, h, M)
+    perturbation_matrix = np.zeros(matrix_shape, dtype=np.float64)
+    if options.pert_func == PerturbationFunction.FPISIN:
+        pi = 3.14159265358979323846
+        pih = pi * h
+        fpisin = 0.25 * (2.0 * pi * pi) * h * h
+        for i in range(1, N):
+            fpisin_i = fpisin * sin(pih * i)
+            for j in range(1, N):
+                perturbation_matrix[i, j] = fpisin_i * sin(pih * j)
+    return CalculationArguments(N, num_matrices, h, M, perturbation_matrix)
 
 
 def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
@@ -54,12 +65,10 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     N = arguments.N
     h = arguments.h
     M = arguments.M
+    perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
     m1, m2 = (0, 1) if options.method == CalculationMethod.JACOBI else (0, 0)
-    pi = 3.14159265358979323846
-    pih = pi * h
-    fpisin = 0.25 * (2.0 * pi * pi) * h * h
     finished = False
     while not finished:
         stat_iteration += 1
@@ -67,7 +76,6 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
             finished = True
         maxresiduum = 0
         for i in range(1, N):
-            fpisin_i = fpisin * sin(pih * i)
             for j in range(1, N):
                 star = 0.25 * (
                     M[m2, i - 1, j]
@@ -75,8 +83,7 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
                     + M[m2, i, j + 1]
                     + M[m2, i + 1, j]
                 )
-                if options.pert_func == PerturbationFunction.FPISIN:
-                    star += fpisin_i * sin(pih * j)
+                star += perturbation_matrix[i, j]
                 if options.termination == TerminationCondition.ACCURACY or finished:
                     residuum = abs(M[m2, i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
