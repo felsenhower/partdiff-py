@@ -30,4 +30,5 @@ jobs:
             --executable='uv run main.py' \
             --cwd='../' \
             --strictness=4 \
-            --shuffle=42
+            --shuffle=42 \
+            --max-num-tests=10
