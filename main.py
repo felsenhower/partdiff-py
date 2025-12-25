@@ -14,57 +14,55 @@ from pympler import asizeof
 
 
 @dataclass(frozen=True)
-class CalculationArguments:
-    N: int
-    num_matrices: int
+class CalculationInput:
+    n: int
     h: float
-    M: np.ndarray
+    tensor: np.ndarray
     perturbation_matrix: np.ndarray
 
 
 @dataclass(frozen=True)
 class CalculationResults:
-    m: int
+    final_matrix: np.ndarray
     stat_iteration: int
     stat_accuracy: float
     duration: float
 
 
-def init_arguments(options: Options) -> CalculationArguments:
-    N = (options.interlines * 8) + 9 - 1
+def init_arguments(options: Options) -> CalculationInput:
+    n = (options.interlines * 8) + 9 - 1
     num_matrices = 2 if options.method == CalculationMethod.JACOBI else 1
-    h = 1.0 / N
-    matrix_shape = (N + 1, N + 1)
+    h = 1.0 / n
+    matrix_shape = (n + 1, n + 1)
     tensor_shape = (num_matrices, *matrix_shape)
-    M = np.zeros(tensor_shape, dtype=np.float64)
+    tensor = np.zeros(tensor_shape, dtype=np.float64)
     if options.pert_func == PerturbationFunction.F0:
         for g in range(num_matrices):
-            for i in range(N + 1):
+            for i in range(n + 1):
                 c1 = 1.0 - (h * i)
                 c2 = h * i
-                M[g, i, 0] = c1
-                M[g, i, N] = c2
-                M[g, 0, i] = c1
-                M[g, N, i] = c2
-            M[g, N, 0] = 0.0
-            M[g, 0, N] = 0.0
+                tensor[g, i, 0] = c1
+                tensor[g, i, n] = c2
+                tensor[g, 0, i] = c1
+                tensor[g, n, i] = c2
+            tensor[g, n, 0] = 0.0
+            tensor[g, 0, n] = 0.0
     perturbation_matrix = np.zeros(matrix_shape, dtype=np.float64)
     if options.pert_func == PerturbationFunction.FPISIN:
         pi = 3.14159265358979323846
         pih = pi * h
         fpisin = 0.25 * (2.0 * pi * pi) * h * h
-        for i in range(1, N):
+        for i in range(1, n):
             fpisin_i = fpisin * sin(pih * i)
-            for j in range(1, N):
+            for j in range(1, n):
                 perturbation_matrix[i, j] = fpisin_i * sin(pih * j)
-    return CalculationArguments(N, num_matrices, h, M, perturbation_matrix)
+    return CalculationInput(n, h, tensor, perturbation_matrix)
 
 
-def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
+def calculate(arguments: CalculationInput, options: Options) -> CalculationResults:
     start_time = time()
-    N = arguments.N
-    h = arguments.h
-    M = arguments.M
+    n = arguments.n
+    tensor = arguments.tensor
     perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
@@ -74,20 +72,20 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
         stat_iteration += 1
         if stat_iteration == options.term_iteration:
             finished = True
-        maxresiduum = 0
-        for i in range(1, N):
-            for j in range(1, N):
+        maxresiduum = 0.0
+        for i in range(1, n):
+            for j in range(1, n):
                 star = 0.25 * (
-                    M[m2, i - 1, j]
-                    + M[m2, i, j - 1]
-                    + M[m2, i, j + 1]
-                    + M[m2, i + 1, j]
+                    tensor[m2, i - 1, j]
+                    + tensor[m2, i, j - 1]
+                    + tensor[m2, i, j + 1]
+                    + tensor[m2, i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
                 if options.termination == TerminationCondition.ACCURACY or finished:
-                    residuum = abs(M[m2, i, j] - star)
+                    residuum = abs(tensor[m2, i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
-                M[m1, i, j] = star
+                tensor[m1, i, j] = star
         stat_accuracy = maxresiduum
         (m1, m2) = (m2, m1)
         if options.termination == TerminationCondition.ACCURACY:
@@ -95,11 +93,12 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
                 finished = True
     end_time = time()
     duration = end_time - start_time
-    return CalculationResults(m2, stat_iteration, stat_accuracy, duration)
+    final_matrix = tensor[m2, :, :]
+    return CalculationResults(final_matrix, stat_iteration, stat_accuracy, duration)
 
 
 def calculate_memory_usage(
-    arguments: CalculationArguments, options: Options, results: CalculationResults
+    arguments: CalculationInput, options: Options, results: CalculationResults
 ) -> float:
     memory_usage = 0
     for o in (arguments, options, results):
@@ -109,12 +108,10 @@ def calculate_memory_usage(
 
 
 def display_statistics(
-    arguments: CalculationArguments, options: Options, results: CalculationResults
+    arguments: CalculationInput, options: Options, results: CalculationResults
 ) -> None:
-    N = arguments.N
-    duration = results.duration
     memory_usage = calculate_memory_usage(arguments, options, results)
-    print(f"Calculation time:       {duration:0.6f} s")
+    print(f"Calculation time:       {results.duration:0.6f} s")
     print(f"Memory usage:           {memory_usage:0.6f} MiB")
     print(f"Calculation method:     {options.method}")
     print(f"Interlines:             {options.interlines}")
@@ -126,15 +123,14 @@ def display_statistics(
 
 
 def display_matrix(
-    arguments: CalculationArguments, options: Options, results: CalculationResults
+    arguments: CalculationInput, options: Options, results: CalculationResults
 ) -> None:
     interlines = options.interlines
-    M = arguments.M
-    m = results.m
+    final_matrix = results.final_matrix
     print("Matrix:")
     for y in range(9):
         for x in range(9):
-            elem = M[m, y * (interlines + 1), x * (interlines + 1)]
+            elem = final_matrix[y * (interlines + 1), x * (interlines + 1)]
             print(f" {elem:0.4f}", end="")
         print("")
 

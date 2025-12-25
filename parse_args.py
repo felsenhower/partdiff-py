@@ -4,12 +4,9 @@ import typing
 from enum import Enum
 from typing import Annotated
 
-import numpy as np
 from annotated_types import Ge, Le
-from pydantic import ConfigDict, TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
-
-# f64 = np.float64
 
 
 class LabeledIntEnum(Enum):
@@ -44,7 +41,6 @@ TermIterations = Annotated[int, Ge(1), Le(200_000)]
 TermAccuracy = Annotated[float, Ge(1e-20), Le(1e-4)]
 
 
-# @dataclass(frozen=True, config=ConfigDict(arbitrary_types_allowed=True))
 @dataclass(frozen=True)
 class Options:
     num_threads: NumThreads
