@@ -68,34 +68,33 @@ def calculate_jacobi(
     perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
-    m1, m2 = (0, 1) if options.method == CalculationMethod.JACOBI else (0, 0)
+    matrix_out = tensor[0, :, :]
+    matrix_in = tensor[1, :, :]
     finished = False
     while not finished:
         stat_iteration += 1
         if stat_iteration == options.term_iteration:
             finished = True
         maxresiduum = 0.0
-        for i in range(1, n):
-            for j in range(1, n):
-                star = 0.25 * (
-                    tensor[m2, i - 1, j]
-                    + tensor[m2, i, j - 1]
-                    + tensor[m2, i, j + 1]
-                    + tensor[m2, i + 1, j]
-                )
-                star += perturbation_matrix[i, j]
-                if options.termination == TerminationCondition.ACCURACY or finished:
-                    residuum = abs(tensor[m2, i, j] - star)
-                    maxresiduum = max(maxresiduum, residuum)
-                tensor[m1, i, j] = star
+        center = matrix_in[1:n, 1:n]
+        north = matrix_in[0 : n - 1, 1:n]
+        west = matrix_in[1:n, 0 : n - 1]
+        east = matrix_in[1:n, 2 : n + 1]
+        south = matrix_in[2 : n + 1, 1:n]
+        pert = perturbation_matrix[1:n, 1:n]
+        new = matrix_out[1:n, 1:n]
+        new[:] = 0.25 * (north + west + east + south) + pert
+        if options.termination == TerminationCondition.ACCURACY or finished:
+            diff = np.abs(center - new)
+            maxresiduum = diff.max()
         stat_accuracy = maxresiduum
-        (m1, m2) = (m2, m1)
+        matrix_out, matrix_in = matrix_in, matrix_out
         if options.termination == TerminationCondition.ACCURACY:
             if maxresiduum < options.term_accuracy:
                 finished = True
     end_time = time()
     duration = end_time - start_time
-    final_matrix = tensor[m2, :, :]
+    final_matrix = matrix_in
     return CalculationResults(final_matrix, stat_iteration, stat_accuracy, duration)
 
 
