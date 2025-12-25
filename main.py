@@ -14,7 +14,7 @@ from pympler import asizeof
 
 
 @dataclass(frozen=True)
-class CalculationInput:
+class CalculationArguments:
     n: int
     h: float
     tensor: np.ndarray
@@ -29,7 +29,7 @@ class CalculationResults:
     duration: float
 
 
-def init_arguments(options: Options) -> CalculationInput:
+def init_arguments(options: Options) -> CalculationArguments:
     n = (options.interlines * 8) + 9 - 1
     num_matrices = 2 if options.method == CalculationMethod.JACOBI else 1
     h = 1.0 / n
@@ -56,10 +56,10 @@ def init_arguments(options: Options) -> CalculationInput:
             fpisin_i = fpisin * sin(pih * i)
             for j in range(1, n):
                 perturbation_matrix[i, j] = fpisin_i * sin(pih * j)
-    return CalculationInput(n, h, tensor, perturbation_matrix)
+    return CalculationArguments(n, h, tensor, perturbation_matrix)
 
 
-def calculate(arguments: CalculationInput, options: Options) -> CalculationResults:
+def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
     start_time = time()
     n = arguments.n
     tensor = arguments.tensor
@@ -98,7 +98,7 @@ def calculate(arguments: CalculationInput, options: Options) -> CalculationResul
 
 
 def calculate_memory_usage(
-    arguments: CalculationInput, options: Options, results: CalculationResults
+    arguments: CalculationArguments, options: Options, results: CalculationResults
 ) -> float:
     memory_usage = 0
     for o in (arguments, options, results):
@@ -108,7 +108,7 @@ def calculate_memory_usage(
 
 
 def display_statistics(
-    arguments: CalculationInput, options: Options, results: CalculationResults
+    arguments: CalculationArguments, options: Options, results: CalculationResults
 ) -> None:
     memory_usage = calculate_memory_usage(arguments, options, results)
     print(f"Calculation time:       {results.duration:0.6f} s")
@@ -123,7 +123,7 @@ def display_statistics(
 
 
 def display_matrix(
-    arguments: CalculationInput, options: Options, results: CalculationResults
+    arguments: CalculationArguments, options: Options, results: CalculationResults
 ) -> None:
     interlines = options.interlines
     final_matrix = results.final_matrix
