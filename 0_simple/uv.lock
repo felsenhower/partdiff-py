@@ -3,6 +3,17 @@ revision = 3
 requires-python = ">=3.13"
 
 [[package]]
+name = "0-simple"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "partdiff-common" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "partdiff-common", directory = "../partdiff_common" }]
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -62,9 +73,9 @@ wheels = [
 ]
 
 [[package]]
-name = "partdiff"
+name = "partdiff-common"
 version = "0.1.0"
-source = { virtual = "." }
+source = { directory = "../partdiff_common" }
 dependencies = [
     { name = "numpy" },
     { name = "pydantic" },

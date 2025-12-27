@@ -28,7 +28,7 @@ jobs:
           cd partdiff_tester && \
           uv run pytest -n 4 --verbose \
             --executable='uv run main.py' \
-            --cwd='../' \
+            --cwd='../0_simple' \
             --strictness=4 \
             --shuffle=42 \
             --max-num-tests=10
