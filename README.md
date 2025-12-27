@@ -46,14 +46,14 @@ With the Jacobi method, the `np_vectorize` version is even faster than the refer
 
 Finally, the `numba` version shows a comparable performance to the reference implementation, being slightly faster for Jacobi and slightly slower for Gauß-Seidel. 
 
-| variant        | method      | runtime_internal   | runtime_total      | runtime_internal_factor | runtime_total_factor |
-|----------------|-------------|--------------------|--------------------|-------------------------|----------------------|
-| `reference`    | Gauß-Seidel | (0.563 ± 0.023) s  | (0.567 ± 0.029) s  | 100.00%                 | 100.00%              |
-| `reference`    | Jacobi      | (0.490 ± 0.017) s  | (0.493 ± 0.023) s  | 100.00%                 | 100.00%              |
-| `simple`       | Gauß-Seidel | (51.817 ± 0.273) s | (52.107 ± 0.273) s | 9198.22%                | 9195.29%             |
-| `simple`       | Jacobi      | (52.287 ± 0.508) s | (52.250 ± 1.087) s | 10670.75%               | 10591.22%            |
-| `numba`        | Gauß-Seidel | (0.703 ± 0.023) s  | (1.150 ± 0.017) s  | 124.85%                 | 202.94%              |
-| `numba`        | Jacobi      | (0.417 ± 0.006) s  | (0.860 ± 0.010) s  | 85.03%                  | 174.32%              |
-| `np_vectorize` | Gauß-Seidel | (55.177 ± 0.303) s | (55.467 ± 0.303) s | 9794.67%                | 9788.24%             |
-| `np_vectorize` | Jacobi      | (0.213 ± 0.006) s  | (0.497 ± 0.012) s  | 43.54%                  | 100.68%              |
+| variant      | method      | runtime_internal   |                         | runtime_total      |                      |
+|--------------|-------------|--------------------|-------------------------|--------------------|----------------------|
+| reference    | Gauß-Seidel | (0.563 ± 0.023) s  | 100.00%                 | (0.567 ± 0.029) s  | 100.00%              |
+| reference    | Jacobi      | (0.490 ± 0.017) s  | 100.00%                 | (0.493 ± 0.023) s  | 100.00%              |
+| simple       | Gauß-Seidel | (51.817 ± 0.273) s | 9198.22%                | (52.107 ± 0.273) s | 9195.29%             |
+| simple       | Jacobi      | (52.287 ± 0.508) s | 10670.75%               | (52.250 ± 1.087) s | 10591.22%            |
+| numba        | Gauß-Seidel | (0.703 ± 0.023) s  | 124.85%                 | (1.150 ± 0.017) s  | 202.94%              |
+| numba        | Jacobi      | (0.417 ± 0.006) s  | 85.03%                  | (0.860 ± 0.010) s  | 174.32%              |
+| np_vectorize | Gauß-Seidel | (55.177 ± 0.303) s | 9794.67%                | (55.467 ± 0.303) s | 9788.24%             |
+| np_vectorize | Jacobi      | (0.213 ± 0.006) s  | 43.54%                  | (0.497 ± 0.012) s  | 100.68%              |
 

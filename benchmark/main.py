@@ -70,13 +70,25 @@ def main():
         pl.col("runtime_internal_factor").map_elements(lambda x: f"{x:.2f}%", return_dtype=pl.String()),
         pl.col("runtime_total_factor").map_elements(lambda x: f"{x:.2f}%", return_dtype=pl.String()),
     )
+    
+    df = df.select(
+        pl.col("variant"),
+        pl.col("method"),
+        pl.col("runtime_internal"),
+        pl.col("runtime_internal_factor"),
+        pl.col("runtime_total"),
+        pl.col("runtime_total_factor")
+    )
 
     with pl.Config(
         tbl_formatting="MARKDOWN",
         tbl_hide_column_data_types=True,
         tbl_hide_dataframe_shape=True,
     ):
-        print(df)
+        s = str(df)
+        for col in ("runtime_internal_factor", "runtime_total_factor"):
+            s = s.replace(col, " " * len(col))
+        print(s)
 
 
 if __name__ == "__main__":
