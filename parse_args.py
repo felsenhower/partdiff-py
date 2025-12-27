@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Annotated
 
 from annotated_types import Ge, Le
-from pydantic import TypeAdapter, ValidationError
+from pydantic import TypeAdapter, ValidationError, Field
 from pydantic.dataclasses import dataclass
 
 
@@ -35,10 +35,10 @@ class TerminationCondition(LabeledIntEnum):
     ITERATIONS = (2, "Number of iterations")
 
 
-NumThreads = Annotated[int, Ge(1), Le(1024)]
-NumInterlines = Annotated[int, Ge(0), Le(100_000)]
-TermIterations = Annotated[int, Ge(1), Le(200_000)]
-TermAccuracy = Annotated[float, Ge(1e-20), Le(1e-4)]
+NumThreads = Annotated[int, Field(ge=1, le=1024)]
+NumInterlines = Annotated[int, Field(ge=0, le=100_000)]
+TermIterations = Annotated[int, Field(ge=1, le=200_000, default=200_000)]
+TermAccuracy = Annotated[float, Field(ge=1e-20, le=1e-4, default=1e-20)]
 
 
 @dataclass(frozen=True)
@@ -48,8 +48,8 @@ class Options:
     interlines: NumInterlines
     pert_func: PerturbationFunction
     termination: TerminationCondition
-    term_iteration: TermIterations | None
-    term_accuracy: TermAccuracy | None
+    term_iteration: TermIterations
+    term_accuracy: TermAccuracy
 
 
 def enum_parser(enum_cls: type):
@@ -85,13 +85,25 @@ def type_parser(cls):
 def parse_term_acc_iter(termination: TerminationCondition, value: str):
     match termination:
         case TerminationCondition.ACCURACY:
-            return (None, annotated_parser(TermAccuracy)(value))
+            return (get_default(TermIterations), annotated_parser(TermAccuracy)(value))
         case TerminationCondition.ITERATIONS:
-            return (annotated_parser(TermIterations)(value), None)
+            return (annotated_parser(TermIterations)(value), get_default(TermAccuracy))
+
+
+def get_default(model):
+    meta = model.__metadata__
+    assert isinstance(meta, tuple)
+    assert len(meta) == 1
+    (field_info,) = meta
+    return field_info.default
 
 
 def annotated_range(model):
     meta = model.__metadata__
+    assert isinstance(meta, tuple)
+    assert len(meta) == 1
+    (field_info,) = meta
+    meta = field_info.metadata
     minimum = max(ann.ge for ann in meta if isinstance(ann, Ge))
     maximum = min(ann.le for ann in meta if isinstance(ann, Le))
     return (minimum, maximum)
