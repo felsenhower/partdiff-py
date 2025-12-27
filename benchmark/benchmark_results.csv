@@ -1,0 +1,31 @@
+variant     , i, method     , runtime_internal, runtime_total
+reference   , 1, Gauß-Seidel, 0.55            , 0.55         
+reference   , 1, Jacobi     , 0.48            , 0.48         
+reference   , 2, Gauß-Seidel, 0.59            , 0.60         
+reference   , 2, Jacobi     , 0.48            , 0.48         
+reference   , 3, Gauß-Seidel, 0.55            , 0.55         
+reference   , 3, Jacobi     , 0.51            , 0.52         
+simple      , 0, Gauß-Seidel, 52.43           , 52.72        
+simple      , 0, Jacobi     , 52.42           , 52.72        
+simple      , 1, Gauß-Seidel, 52.12           , 52.41        
+simple      , 1, Jacobi     , 52.67           , 52.97        
+simple      , 2, Gauß-Seidel, 51.59           , 51.88        
+simple      , 2, Jacobi     , 51.71           , 51.00        
+simple      , 3, Gauß-Seidel, 51.74           , 52.03        
+simple      , 3, Jacobi     , 52.48           , 52.78        
+numba       , 0, Gauß-Seidel, 0.69            , 1.12         
+numba       , 0, Jacobi     , 0.41            , 0.84         
+numba       , 1, Gauß-Seidel, 0.69            , 1.14         
+numba       , 1, Jacobi     , 0.42            , 0.86         
+numba       , 2, Gauß-Seidel, 0.69            , 1.14         
+numba       , 2, Jacobi     , 0.41            , 0.85         
+numba       , 3, Gauß-Seidel, 0.73            , 1.17         
+numba       , 3, Jacobi     , 0.42            , 0.87         
+np_vectorize, 0, Gauß-Seidel, 51.49           , 51.77        
+np_vectorize, 0, Jacobi     , 0.21            , 0.50         
+np_vectorize, 1, Gauß-Seidel, 55.31           , 55.60        
+np_vectorize, 1, Jacobi     , 0.21            , 0.49         
+np_vectorize, 2, Gauß-Seidel, 55.39           , 55.68        
+np_vectorize, 2, Jacobi     , 0.21            , 0.49         
+np_vectorize, 3, Gauß-Seidel, 54.83           , 55.12        
+np_vectorize, 3, Jacobi     , 0.22            , 0.51         
