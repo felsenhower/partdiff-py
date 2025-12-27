@@ -38,11 +38,8 @@ def calculate_iterate(
     matrix_in = matrix_out
     if method == CalculationMethod.JACOBI:
         matrix_in = tensor[1, :, :]
-    finished = False
-    while not finished:
+    while True:
         stat_iteration += 1
-        if stat_iteration == term_iteration:
-            finished = True
         maxresiduum = 0.0
         for i in range(1, n):
             for j in range(1, n):
@@ -53,7 +50,10 @@ def calculate_iterate(
                     + matrix_in[i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
-                if termination == TerminationCondition.ACCURACY or finished:
+                if (
+                    termination == TerminationCondition.ACCURACY
+                    or stat_iteration == term_iteration
+                ):
                     residuum = abs(matrix_in[i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
                 matrix_out[i, j] = star
@@ -61,7 +61,10 @@ def calculate_iterate(
         matrix_in, matrix_out = matrix_out, matrix_in
         if termination == TerminationCondition.ACCURACY:
             if maxresiduum < term_accuracy:
-                finished = True
+                break
+        else:
+            if stat_iteration == term_iteration:
+                break
     final_matrix = matrix_in
     return final_matrix, stat_iteration, stat_accuracy
 

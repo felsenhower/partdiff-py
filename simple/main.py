@@ -1,4 +1,5 @@
 from time import time
+from itertools import count
 
 from partdiff_common.parse_args import (
     parse_args,
@@ -29,11 +30,7 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     matrix_in = matrix_out
     if options.method == CalculationMethod.JACOBI:
         matrix_in = tensor[1, :, :]
-    finished = False
-    while not finished:
-        stat_iteration += 1
-        if stat_iteration == options.term_iteration:
-            finished = True
+    for stat_iteration in count(start=1):
         maxresiduum = 0.0
         for i in range(1, n):
             for j in range(1, n):
@@ -44,7 +41,10 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
                     + matrix_in[i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
-                if options.termination == TerminationCondition.ACCURACY or finished:
+                if (
+                    options.termination == TerminationCondition.ACCURACY
+                    or stat_iteration == options.term_iteration
+                ):
                     residuum = abs(matrix_in[i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
                 matrix_out[i, j] = star
@@ -52,7 +52,10 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
         matrix_in, matrix_out = matrix_out, matrix_in
         if options.termination == TerminationCondition.ACCURACY:
             if maxresiduum < options.term_accuracy:
-                finished = True
+                break
+        else:
+            if stat_iteration == options.term_iteration:
+                break
     end_time = time()
     duration = end_time - start_time
     final_matrix = matrix_in

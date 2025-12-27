@@ -1,5 +1,6 @@
 from time import time
 import numpy as np
+from itertools import count
 
 from partdiff_common.parse_args import (
     parse_args,
@@ -26,15 +27,10 @@ def calculate_jacobi(
     n = arguments.n
     tensor = arguments.tensor
     perturbation_matrix = arguments.perturbation_matrix
-    stat_iteration = 0
     stat_accuracy = None
     matrix_out = tensor[0, :, :]
     matrix_in = tensor[1, :, :]
-    finished = False
-    while not finished:
-        stat_iteration += 1
-        if stat_iteration == options.term_iteration:
-            finished = True
+    for stat_iteration in count(start=1):
         maxresiduum = 0.0
         center = matrix_in[1:n, 1:n]
         north = matrix_in[0 : n - 1, 1:n]
@@ -44,14 +40,19 @@ def calculate_jacobi(
         pert = perturbation_matrix[1:n, 1:n]
         new = matrix_out[1:n, 1:n]
         new[:] = 0.25 * (north + west + east + south) + pert
-        if options.termination == TerminationCondition.ACCURACY or finished:
-            diff = np.abs(center - new)
-            maxresiduum = diff.max()
+        if (
+            options.termination == TerminationCondition.ACCURACY
+            or stat_iteration == options.term_iteration
+        ):
+            maxresiduum = np.abs(center - new).max()
         stat_accuracy = maxresiduum
         matrix_out, matrix_in = matrix_in, matrix_out
         if options.termination == TerminationCondition.ACCURACY:
             if maxresiduum < options.term_accuracy:
-                finished = True
+                break
+        else:
+            if stat_iteration == options.term_iteration:
+                break
     end_time = time()
     duration = end_time - start_time
     final_matrix = matrix_in
@@ -68,11 +69,7 @@ def calculate_gauss_seidel(
     stat_iteration = 0
     stat_accuracy = None
     matrix = tensor[0, :, :]
-    finished = False
-    while not finished:
-        stat_iteration += 1
-        if stat_iteration == options.term_iteration:
-            finished = True
+    for stat_iteration in count(start=1):
         maxresiduum = 0.0
         for i in range(1, n):
             for j in range(1, n):
@@ -83,14 +80,20 @@ def calculate_gauss_seidel(
                     + matrix[i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
-                if options.termination == TerminationCondition.ACCURACY or finished:
+                if (
+                    options.termination == TerminationCondition.ACCURACY
+                    or stat_iteration == options.term_iteration
+                ):
                     residuum = abs(matrix[i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
                 matrix[i, j] = star
         stat_accuracy = maxresiduum
         if options.termination == TerminationCondition.ACCURACY:
             if maxresiduum < options.term_accuracy:
-                finished = True
+                break
+        else:
+            if stat_iteration == options.term_iteration:
+                break
     end_time = time()
     duration = end_time - start_time
     final_matrix = matrix
