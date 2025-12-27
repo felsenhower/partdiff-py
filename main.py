@@ -59,55 +59,14 @@ def init_arguments(options: Options) -> CalculationArguments:
     return CalculationArguments(n, h, tensor, perturbation_matrix)
 
 
-def calculate_jacobi(
-    arguments: CalculationArguments, options: Options
-) -> CalculationResults:
+def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
     start_time = time()
     n = arguments.n
     tensor = arguments.tensor
     perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
-    matrix_out = tensor[0, :, :]
-    matrix_in = tensor[1, :, :]
-    finished = False
-    while not finished:
-        stat_iteration += 1
-        if stat_iteration == options.term_iteration:
-            finished = True
-        maxresiduum = 0.0
-        center = matrix_in[1:n, 1:n]
-        north = matrix_in[0 : n - 1, 1:n]
-        west = matrix_in[1:n, 0 : n - 1]
-        east = matrix_in[1:n, 2 : n + 1]
-        south = matrix_in[2 : n + 1, 1:n]
-        pert = perturbation_matrix[1:n, 1:n]
-        new = matrix_out[1:n, 1:n]
-        new[:] = 0.25 * (north + west + east + south) + pert
-        if options.termination == TerminationCondition.ACCURACY or finished:
-            diff = np.abs(center - new)
-            maxresiduum = diff.max()
-        stat_accuracy = maxresiduum
-        matrix_out, matrix_in = matrix_in, matrix_out
-        if options.termination == TerminationCondition.ACCURACY:
-            if maxresiduum < options.term_accuracy:
-                finished = True
-    end_time = time()
-    duration = end_time - start_time
-    final_matrix = matrix_in
-    return CalculationResults(final_matrix, stat_iteration, stat_accuracy, duration)
-
-
-def calculate_gauss_seidel(
-    arguments: CalculationArguments, options: Options
-) -> CalculationResults:
-    start_time = time()
-    n = arguments.n
-    tensor = arguments.tensor
-    perturbation_matrix = arguments.perturbation_matrix
-    stat_iteration = 0
-    stat_accuracy = None
-    matrix = tensor[0, :, :]
+    m1, m2 = (0, 1) if options.method == CalculationMethod.JACOBI else (0, 0)
     finished = False
     while not finished:
         stat_iteration += 1
@@ -117,32 +76,25 @@ def calculate_gauss_seidel(
         for i in range(1, n):
             for j in range(1, n):
                 star = 0.25 * (
-                    matrix[i - 1, j]
-                    + matrix[i, j - 1]
-                    + matrix[i, j + 1]
-                    + matrix[i + 1, j]
+                    tensor[m2, i - 1, j]
+                    + tensor[m2, i, j - 1]
+                    + tensor[m2, i, j + 1]
+                    + tensor[m2, i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
                 if options.termination == TerminationCondition.ACCURACY or finished:
-                    residuum = abs(matrix[i, j] - star)
+                    residuum = abs(tensor[m2, i, j] - star)
                     maxresiduum = max(maxresiduum, residuum)
-                matrix[i, j] = star
+                tensor[m1, i, j] = star
         stat_accuracy = maxresiduum
+        (m1, m2) = (m2, m1)
         if options.termination == TerminationCondition.ACCURACY:
             if maxresiduum < options.term_accuracy:
                 finished = True
     end_time = time()
     duration = end_time - start_time
-    final_matrix = matrix
+    final_matrix = tensor[m2, :, :]
     return CalculationResults(final_matrix, stat_iteration, stat_accuracy, duration)
-
-
-def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
-    match options.method:
-        case CalculationMethod.JACOBI:
-            return calculate_jacobi(arguments, options)
-        case CalculationMethod.GAUSS_SEIDEL:
-            return calculate_gauss_seidel(arguments, options)
 
 
 def calculate_memory_usage(
