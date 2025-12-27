@@ -1,0 +1,13 @@
+[project]
+name = "partdiff"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "numba>=0.63.1",
+    "partdiff-common",
+]
+
+[tool.uv.sources]
+partdiff-common = { path = "../partdiff_common" }
