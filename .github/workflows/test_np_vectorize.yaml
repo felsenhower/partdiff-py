@@ -1,4 +1,4 @@
-name: Correctness Check
+name: Correctness Check (np_vectorize)
 
 on:
   push:

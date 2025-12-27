@@ -1,4 +1,4 @@
-name: Correctness Check
+name: Correctness Check (simple)
 
 on:
   push:
