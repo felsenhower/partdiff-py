@@ -23,63 +23,46 @@ from partdiff_common import (
     CalculationResults,
 )
 
-cdef int METH_GAUSS_SEIDEL = 1
-cdef int METH_JACOBI = 2
-cdef int TERM_ACC = 1
-cdef int TERM_ITER = 2
-
-cdef inline double tensor_get(double* tensor, int N, int m, int i, int j) noexcept nogil:
-    return tensor[m * (N+1) * (N+1) + i * (N+1) + j]
-
-cdef inline void tensor_set(double* tensor, int N, int m, int i, int j, double value) noexcept nogil:
-    tensor[m * (N+1) * (N+1) + i * (N+1) + j] = value
-
-cdef inline double matrix_get(double* matrix, int N, int i, int j) noexcept nogil:
-    return matrix[i * (N+1) + j]
+cdef int METH_GAUSS_SEIDEL = CalculationMethod.GAUSS_SEIDEL.value
+cdef int METH_JACOBI = CalculationMethod.JACOBI.value
+cdef int TERM_ACC = TerminationCondition.ACCURACY.value
+cdef int TERM_ITER = TerminationCondition.ITERATIONS.value
 
 cdef tuple calculate_inner(
-    int N,
-    int term_iteration,
-    double* tensor,
-    double* perturbation_matrix,
     int method,
     int termination,
-    double term_accuracy
+    int term_iteration,
+    double term_accuracy,
+    int n,
+    double[:, :, :] tensor,
+    double[:, :] perturbation_matrix,
 ):
-    cdef int m1, m2
     cdef int i, j
+    cdef int m1, m2
     cdef double star, residuum, maxresiduum
     cdef int stat_iteration = 0
     cdef double stat_accuracy = 0.0
-    cdef int temp
-    if method == METH_JACOBI:
-        m1 = 0
-        m2 = 1
-    else:
-        m1 = 0
-        m2 = 0
+    (m1, m2) = (0, 1) if method == METH_JACOBI else (0, 0)
     while term_iteration > 0:
         maxresiduum = 0.0
-        for i in range(1, N):
-            for j in range(1, N):
+        for i in range(1, n):
+            for j in range(1, n):
                 star = 0.25 * (
-                    tensor_get(tensor, N, m2, i-1, j) +
-                    tensor_get(tensor, N, m2, i, j-1) +
-                    tensor_get(tensor, N, m2, i, j+1) +
-                    tensor_get(tensor, N, m2, i+1, j)
+                    tensor[m2, i - 1, j] + 
+                    tensor[m2, i, j - 1] +
+                    tensor[m2, i, j + 1] +
+                    tensor[m2, i + 1, j]
                 )
-                star += matrix_get(perturbation_matrix, N, i, j)
+                star += perturbation_matrix[i, j]
                 if termination == TERM_ACC or term_iteration == 1:
-                    residuum = tensor_get(tensor, N, m2, i, j) - star
+                    residuum = tensor[m2, i, j] - star
                     residuum = fabs(residuum)
                     if residuum > maxresiduum:
                         maxresiduum = residuum
-                tensor_set(tensor, N, m1, i, j, star)
+                tensor[m1, i, j] = star
         stat_iteration += 1
         stat_accuracy = maxresiduum
-        temp = m1
-        m1 = m2
-        m2 = temp
+        (m1, m2) = (m2, m1)
         if termination == TERM_ACC:
             if maxresiduum < term_accuracy:
                 term_iteration = 0
@@ -87,45 +70,23 @@ cdef tuple calculate_inner(
             term_iteration -= 1
     return m2, stat_iteration, stat_accuracy
 
-def calculate_np(
-    int N,
-    int term_iteration,
-    np.ndarray[np.float64_t, ndim=3, mode="c"] tensor,
-    np.ndarray[np.float64_t, ndim=2, mode="c"] perturbation_matrix,
-    int method,
-    int termination,
-    double term_accuracy
-):
-    if not (1 <= tensor.shape[0] <= 2) or tensor.shape[1] != N+1 or tensor.shape[2] != N+1:
-        raise ValueError("tensor must have shape (2, N+1, N+1)")
-    if perturbation_matrix.shape[0] != N+1 or perturbation_matrix.shape[1] != N+1:
-        raise ValueError("perturbation_matrix must have shape (N+1, N+1)")
-    cdef double* tensor_ptr = <double*> tensor.data
-    cdef double* matrix_ptr = <double*> perturbation_matrix.data
-    cdef int m
-    cdef int stat_iteration
-    cdef double stat_accuracy
+def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
+    cdef int method = options.method.value
+    cdef int termination = options.termination.value
+    cdef int term_iteration = options.term_iteration
+    cdef double term_accuracy = options.term_accuracy
+    cdef int n = arguments.n
+    cdef double[:, :, :] tensor = arguments.tensor
+    cdef double[:, :] perturbation_matrix = arguments.perturbation_matrix
+    start_time = time()
     m, stat_iteration, stat_accuracy = calculate_inner(
-        N,
-        term_iteration,
-        tensor_ptr,
-        matrix_ptr,
         method,
         termination,
-        term_accuracy
-    )
-    return m, stat_iteration, stat_accuracy
-
-def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
-    start_time = time()
-    m, stat_iteration, stat_accuracy = calculate_np(
-        arguments.n,
-        options.term_iteration,
-        arguments.tensor,
-        arguments.perturbation_matrix,
-        options.method.value,
-        options.termination.value,
-        options.term_accuracy,
+        term_iteration,
+        term_accuracy,
+        n,
+        tensor,
+        perturbation_matrix,
     )
     end_time = time()
     duration = end_time - start_time
