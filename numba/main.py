@@ -30,7 +30,7 @@ PI = 3.14159265358979323846
 
 
 @njit
-def calculate_iterate(
+def calculate_inner(
     method: CalculationMethod,
     pert_func: PerturbationFunction,
     termination: TerminationCondition,
@@ -110,7 +110,7 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
         CalculationResults: The results of the calculation.
     """
     start_time = time()
-    final_matrix, stat_iteration, stat_accuracy = calculate_iterate(
+    final_matrix, stat_iteration, stat_accuracy = calculate_inner(
         options.method,
         options.pert_func,
         options.termination,
