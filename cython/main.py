@@ -1,13 +1,11 @@
-from partdiff_common.parse_args import parse_args
-
+from calculate import calculate
 from partdiff_common import (
     check_float_info,
-    init_arguments,
-    display_statistics,
     display_matrix,
+    display_statistics,
+    init_arguments,
 )
-
-from calculate import calculate
+from partdiff_common.parse_args import parse_args
 
 
 def main() -> None:

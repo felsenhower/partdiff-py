@@ -1,22 +1,20 @@
-from time import time
-import numpy as np
 from itertools import count
+from time import time
 
-from partdiff_common.parse_args import (
-    parse_args,
-    Options,
-    CalculationMethod,
-    PerturbationFunction,
-    TerminationCondition,
-)
-
+import numpy as np
 from partdiff_common import (
     CalculationArguments,
     CalculationResults,
     check_float_info,
-    init_arguments,
-    display_statistics,
     display_matrix,
+    display_statistics,
+    init_arguments,
+)
+from partdiff_common.parse_args import (
+    CalculationMethod,
+    Options,
+    TerminationCondition,
+    parse_args,
 )
 
 

@@ -1,24 +1,22 @@
 from time import time
-from numba import njit
+
 import numpy as np
-
-from partdiff_common.parse_args import (
-    parse_args,
-    Options,
-    CalculationMethod,
-    PerturbationFunction,
-    TerminationCondition,
-    TermIterations,
-    TermAccuracy,
-)
-
+from numba import njit
 from partdiff_common import (
     CalculationArguments,
     CalculationResults,
     check_float_info,
-    init_arguments,
-    display_statistics,
     display_matrix,
+    display_statistics,
+    init_arguments,
+)
+from partdiff_common.parse_args import (
+    CalculationMethod,
+    Options,
+    TermAccuracy,
+    TerminationCondition,
+    TermIterations,
+    parse_args,
 )
 
 
