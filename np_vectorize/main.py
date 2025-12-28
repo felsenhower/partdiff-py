@@ -1,3 +1,8 @@
+"""
+partdiff-py is a Python port of partdiff.
+This is the "np_vectorize" variant. It uses numpy's vectorized math for the Jacobi variant.
+"""
+
 from itertools import count
 from time import time
 
@@ -21,6 +26,15 @@ from partdiff_common.parse_args import (
 def calculate_jacobi(
     arguments: CalculationArguments, options: Options
 ) -> CalculationResults:
+    """Solve the Poisson equation iteratively using the Jacobi method.
+
+    Args:
+        arguments (CalculationArguments): The internal representation of the problem.
+        options (Options): The program options.
+
+    Returns:
+        CalculationResults: The results of the calculation.
+    """
     start_time = time()
     n = arguments.n
     tensor = arguments.tensor
@@ -60,6 +74,15 @@ def calculate_jacobi(
 def calculate_gauss_seidel(
     arguments: CalculationArguments, options: Options
 ) -> CalculationResults:
+    """Solve the Poisson equation iteratively using the Gauß-Seidel method.
+
+    Args:
+        arguments (CalculationArguments): The internal representation of the problem.
+        options (Options): The program options.
+
+    Returns:
+        CalculationResults: The results of the calculation.
+    """
     start_time = time()
     n = arguments.n
     tensor = arguments.tensor
@@ -99,6 +122,15 @@ def calculate_gauss_seidel(
 
 
 def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
+    """Solve the Poisson equation iteratively using the Jacobi or Gauß-Seidel method.
+
+    Args:
+        arguments (CalculationArguments): The internal representation of the problem.
+        options (Options): The program options.
+
+    Returns:
+        CalculationResults: The results of the calculation.
+    """
     match options.method:
         case CalculationMethod.JACOBI:
             return calculate_jacobi(arguments, options)
@@ -112,7 +144,7 @@ def main() -> None:
     arguments = init_arguments(options)
     results = calculate(arguments, options)
     display_statistics(arguments, options, results)
-    display_matrix(arguments, options, results)
+    display_matrix(options, results)
 
 
 if __name__ == "__main__":

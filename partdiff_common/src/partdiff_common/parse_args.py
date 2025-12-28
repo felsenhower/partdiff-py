@@ -1,3 +1,7 @@
+"""
+Partdiff argument parser.
+"""
+
 import argparse
 import inspect
 import typing
@@ -5,7 +9,7 @@ from enum import Enum
 from typing import Annotated
 
 from annotated_types import Ge, Le
-from pydantic import TypeAdapter, ValidationError, Field
+from pydantic import Field, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
 
 

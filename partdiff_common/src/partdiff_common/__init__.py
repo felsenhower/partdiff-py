@@ -1,27 +1,39 @@
-from partdiff_common.parse_args import (
-    Options,
-    CalculationMethod,
-    PerturbationFunction,
-    TerminationCondition,
-)
-from dataclasses import dataclass
-import numpy as np
+"""
+This module contains the shared parts of partdiff, e.g. all the stuff for
+initializing matrices or displaying statistics.
+"""
+
 import sys
+from dataclasses import dataclass
 from math import sin
 
+import numpy as np
 from pympler import asizeof
+
+from partdiff_common.parse_args import (
+    CalculationMethod,
+    Options,
+    PerturbationFunction,
+)
 
 
 @dataclass(frozen=True)
 class CalculationArguments:
+    """This class contains the internal representation of the problem, i.e. the
+    initialized matrices. All matrices have the size (n+1)*(n+1).
+    The tensor may be 1*(n+1)*(n+1) or 2*(n+1)*(n+1), depending on the method.
+    The perturbation matrix contains the precomputed values of the perturbation function.
+    """
+
     n: int
-    h: float
     tensor: np.ndarray
     perturbation_matrix: np.ndarray
 
 
 @dataclass(frozen=True)
 class CalculationResults:
+    """This class contains the final results of the calculation."""
+
     final_matrix: np.ndarray
     stat_iteration: int
     stat_accuracy: float
@@ -29,6 +41,14 @@ class CalculationResults:
 
 
 def init_arguments(options: Options) -> CalculationArguments:
+    """Init the CalculationArguments.
+
+    Args:
+        options (Options): The program options.
+
+    Returns:
+        CalculationArguments: The initialized problem representation.
+    """
     n = (options.interlines * 8) + 9 - 1
     num_matrices = 2 if options.method == CalculationMethod.JACOBI else 1
     h = 1.0 / n
@@ -55,12 +75,22 @@ def init_arguments(options: Options) -> CalculationArguments:
             fpisin_i = fpisin * sin(pih * i)
             for j in range(1, n):
                 perturbation_matrix[i, j] = fpisin_i * sin(pih * j)
-    return CalculationArguments(n, h, tensor, perturbation_matrix)
+    return CalculationArguments(n, tensor, perturbation_matrix)
 
 
 def calculate_memory_usage(
     arguments: CalculationArguments, options: Options, results: CalculationResults
 ) -> float:
+    """Calculate the total memory usage.
+
+    Args:
+        arguments (CalculationArguments): The calculation arguments.
+        options (Options): The program options.
+        results (CalculationResults): The calculation results.
+
+    Returns:
+        float: The memory usage in MiB.
+    """
     memory_usage = 0
     for o in (arguments, options, results):
         memory_usage += asizeof.asizeof(o)
@@ -71,6 +101,13 @@ def calculate_memory_usage(
 def display_statistics(
     arguments: CalculationArguments, options: Options, results: CalculationResults
 ) -> None:
+    """Display statistics about the calculation.
+
+    Args:
+        arguments (CalculationArguments): The calculation arguments.
+        options (Options): The program options.
+        results (CalculationResults): The calculation results.
+    """
     memory_usage = calculate_memory_usage(arguments, options, results)
     print(f"Calculation time:       {results.duration:0.6f} s")
     print(f"Memory usage:           {memory_usage:0.6f} MiB")
@@ -83,9 +120,13 @@ def display_statistics(
     print("")
 
 
-def display_matrix(
-    arguments: CalculationArguments, options: Options, results: CalculationResults
-) -> None:
+def display_matrix(options: Options, results: CalculationResults) -> None:
+    """Display the final matrix in a 9x9 format.
+
+    Args:
+        options (Options): The program options.
+        results (CalculationResults): The calculation results.
+    """
     interlines = options.interlines
     final_matrix = results.final_matrix
     print("Matrix:")
@@ -97,6 +138,7 @@ def display_matrix(
 
 
 def check_float_info() -> None:
+    """Check that we're running a platform where Python's builtin float is double."""
     float_info = sys.float_info
     assert (float_info.max_exp, float_info.mant_dig) == (1024, 53), (
         "This application does only work on platforms where built-in float is IEEE 754 binary64, e.g. CPython.",

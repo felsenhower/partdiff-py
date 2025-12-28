@@ -1,3 +1,8 @@
+"""
+partdiff-py is a Python port of partdiff.
+This is the "simple" variant.
+"""
+
 from itertools import count
 from time import time
 
@@ -18,6 +23,15 @@ from partdiff_common.parse_args import (
 
 
 def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
+    """Solve the Poisson equation iteratively using the Jacobi or Gauß-Seidel method.
+
+    Args:
+        arguments (CalculationArguments): The internal representation of the problem.
+        options (Options): The program options.
+
+    Returns:
+        CalculationResults: The results of the calculation.
+    """
     start_time = time()
     n = arguments.n
     tensor = arguments.tensor
@@ -66,7 +80,7 @@ def main() -> None:
     arguments = init_arguments(options)
     results = calculate(arguments, options)
     display_statistics(arguments, options, results)
-    display_matrix(arguments, options, results)
+    display_matrix(options, results)
 
 
 if __name__ == "__main__":
