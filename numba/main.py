@@ -7,6 +7,7 @@ from time import time
 
 import numpy as np
 from numba import njit
+from numpy import sin
 from partdiff_common import (
     CalculationArguments,
     CalculationResults,
@@ -18,34 +19,38 @@ from partdiff_common import (
 from partdiff_common.parse_args import (
     CalculationMethod,
     Options,
+    PerturbationFunction,
     TermAccuracy,
     TerminationCondition,
     TermIterations,
     parse_args,
 )
 
+PI = 3.14159265358979323846
+
 
 @njit
 def calculate_iterate(
     method: CalculationMethod,
+    pert_func: PerturbationFunction,
     termination: TerminationCondition,
     term_iteration: TermIterations,
     term_accuracy: TermAccuracy,
     n: int,
+    h: float,
     tensor: np.ndarray,
-    perturbation_matrix: np.ndarray,
 ) -> tuple[np.ndarray, int, float]:
     """The inner calculation part of the calculate method which is just-in-time compiled
     with numba here.
 
     Args:
         method (CalculationMethod): The method (Gauß-Seidel or Jacobi).
+        pert_func (PerturbationFunction): The perturbation function.
         termination (TerminationCondition): Termination (Iterations or Accuracy).
         term_iteration (TermIterations): Max iterations.
         term_accuracy (TermAccuracy): Min accuracy.
         n (int): Problem size (matrix is (n+1)*(n+1)).
         tensor (np.ndarray): The problem matrices.
-        perturbation_matrix (np.ndarray): Precomputed perturbation function values.
 
     Returns:
         tuple[np.ndarray, int, float]: A tuple containing the final matrix,
@@ -57,10 +62,15 @@ def calculate_iterate(
     matrix_in = matrix_out
     if method == CalculationMethod.JACOBI:
         matrix_in = tensor[1, :, :]
+    if pert_func == PerturbationFunction.FPISIN:
+        pih = PI * h
+        fpisin = 0.25 * (2.0 * PI * PI) * h * h
     while True:
         stat_iteration += 1
         maxresiduum = 0.0
         for i in range(1, n):
+            if pert_func == PerturbationFunction.FPISIN:
+                fpisin_i = fpisin * sin(pih * float(i))
             for j in range(1, n):
                 star = 0.25 * (
                     matrix_in[i - 1, j]
@@ -68,7 +78,8 @@ def calculate_iterate(
                     + matrix_in[i, j + 1]
                     + matrix_in[i + 1, j]
                 )
-                star += perturbation_matrix[i, j]
+                if pert_func == PerturbationFunction.FPISIN:
+                    star += fpisin_i * sin(pih * float(j))
                 if (
                     termination == TerminationCondition.ACCURACY
                     or stat_iteration == term_iteration
@@ -101,12 +112,13 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     start_time = time()
     final_matrix, stat_iteration, stat_accuracy = calculate_iterate(
         options.method,
+        options.pert_func,
         options.termination,
         options.term_iteration,
         options.term_accuracy,
         arguments.n,
+        arguments.h,
         arguments.tensor,
-        arguments.perturbation_matrix,
     )
     end_time = time()
     duration = end_time - start_time

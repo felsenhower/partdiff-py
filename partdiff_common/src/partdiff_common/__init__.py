@@ -5,7 +5,6 @@ initializing matrices or displaying statistics.
 
 import sys
 from dataclasses import dataclass
-from math import sin
 
 import numpy as np
 from pympler import asizeof
@@ -22,12 +21,10 @@ class CalculationArguments:
     """This class contains the internal representation of the problem, i.e. the
     initialized matrices. All matrices have the size (n+1)*(n+1).
     The tensor may be 1*(n+1)*(n+1) or 2*(n+1)*(n+1), depending on the method.
-    The perturbation matrix contains the precomputed values of the perturbation function.
     """
-
     n: int
+    h: float
     tensor: np.ndarray
-    perturbation_matrix: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -52,8 +49,7 @@ def init_arguments(options: Options) -> CalculationArguments:
     n = (options.interlines * 8) + 9 - 1
     num_matrices = 2 if options.method == CalculationMethod.JACOBI else 1
     h = 1.0 / n
-    matrix_shape = (n + 1, n + 1)
-    tensor_shape = (num_matrices, *matrix_shape)
+    tensor_shape = (num_matrices, n + 1, n + 1)
     tensor = np.zeros(tensor_shape, dtype=np.float64)
     if options.pert_func == PerturbationFunction.F0:
         for g in range(num_matrices):
@@ -66,16 +62,7 @@ def init_arguments(options: Options) -> CalculationArguments:
                 tensor[g, n, i] = c2
             tensor[g, n, 0] = 0.0
             tensor[g, 0, n] = 0.0
-    perturbation_matrix = np.zeros(matrix_shape, dtype=np.float64)
-    if options.pert_func == PerturbationFunction.FPISIN:
-        pi = 3.14159265358979323846
-        pih = pi * h
-        fpisin = 0.25 * (2.0 * pi * pi) * h * h
-        for i in range(1, n):
-            fpisin_i = fpisin * sin(pih * i)
-            for j in range(1, n):
-                perturbation_matrix[i, j] = fpisin_i * sin(pih * j)
-    return CalculationArguments(n, tensor, perturbation_matrix)
+    return CalculationArguments(n, h, tensor)
 
 
 def calculate_memory_usage(

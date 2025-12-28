@@ -6,6 +6,7 @@ This is the "simple" variant.
 from itertools import count
 from time import time
 
+from numpy import sin
 from partdiff_common import (
     CalculationArguments,
     CalculationResults,
@@ -17,9 +18,12 @@ from partdiff_common import (
 from partdiff_common.parse_args import (
     CalculationMethod,
     Options,
+    PerturbationFunction,
     TerminationCondition,
     parse_args,
 )
+
+PI = 3.14159265358979323846
 
 
 def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
@@ -34,17 +38,22 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     """
     start_time = time()
     n = arguments.n
+    h = arguments.h
     tensor = arguments.tensor
-    perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
     matrix_out = tensor[0, :, :]
     matrix_in = matrix_out
     if options.method == CalculationMethod.JACOBI:
         matrix_in = tensor[1, :, :]
+    if options.pert_func == PerturbationFunction.FPISIN:
+        pih = PI * h
+        fpisin = 0.25 * (2.0 * PI * PI) * h * h
     for stat_iteration in count(start=1):
         maxresiduum = 0.0
         for i in range(1, n):
+            if options.pert_func == PerturbationFunction.FPISIN:
+                fpisin_i = fpisin * sin(pih * float(i))
             for j in range(1, n):
                 star = 0.25 * (
                     matrix_in[i - 1, j]
@@ -52,7 +61,8 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
                     + matrix_in[i, j + 1]
                     + matrix_in[i + 1, j]
                 )
-                star += perturbation_matrix[i, j]
+                if options.pert_func == PerturbationFunction.FPISIN:
+                    star += fpisin_i * sin(pih * float(j))
                 if (
                     options.termination == TerminationCondition.ACCURACY
                     or stat_iteration == options.term_iteration

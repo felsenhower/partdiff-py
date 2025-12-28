@@ -7,6 +7,7 @@ from itertools import count
 from time import time
 
 import numpy as np
+from numpy import sin
 from partdiff_common import (
     CalculationArguments,
     CalculationResults,
@@ -18,9 +19,12 @@ from partdiff_common import (
 from partdiff_common.parse_args import (
     CalculationMethod,
     Options,
+    PerturbationFunction,
     TerminationCondition,
     parse_args,
 )
+
+PI = 3.14159265358979323846
 
 
 def calculate_jacobi(
@@ -37,11 +41,19 @@ def calculate_jacobi(
     """
     start_time = time()
     n = arguments.n
+    h = arguments.h
     tensor = arguments.tensor
-    perturbation_matrix = arguments.perturbation_matrix
     stat_accuracy = None
     matrix_out = tensor[0, :, :]
     matrix_in = tensor[1, :, :]
+    perturbation_matrix = np.zeros((n + 1, n + 1), dtype=np.float64)
+    if options.pert_func == PerturbationFunction.FPISIN:
+        pih = PI * h
+        fpisin = 0.25 * (2.0 * PI * PI) * h * h
+        for i in range(1, n):
+            fpisin_i = fpisin * sin(pih * i)
+            for j in range(1, n):
+                perturbation_matrix[i, j] = fpisin_i * sin(pih * j)
     for stat_iteration in count(start=1):
         maxresiduum = 0.0
         center = matrix_in[1:n, 1:n]
@@ -85,14 +97,19 @@ def calculate_gauss_seidel(
     """
     start_time = time()
     n = arguments.n
+    h = arguments.h
     tensor = arguments.tensor
-    perturbation_matrix = arguments.perturbation_matrix
     stat_iteration = 0
     stat_accuracy = None
     matrix = tensor[0, :, :]
+    if options.pert_func == PerturbationFunction.FPISIN:
+        pih = PI * h
+        fpisin = 0.25 * (2.0 * PI * PI) * h * h
     for stat_iteration in count(start=1):
         maxresiduum = 0.0
         for i in range(1, n):
+            if options.pert_func == PerturbationFunction.FPISIN:
+                fpisin_i = fpisin * sin(pih * float(i))
             for j in range(1, n):
                 star = 0.25 * (
                     matrix[i - 1, j]
@@ -100,7 +117,8 @@ def calculate_gauss_seidel(
                     + matrix[i, j + 1]
                     + matrix[i + 1, j]
                 )
-                star += perturbation_matrix[i, j]
+                if options.pert_func == PerturbationFunction.FPISIN:
+                    star += fpisin_i * sin(pih * float(j))
                 if (
                     options.termination == TerminationCondition.ACCURACY
                     or stat_iteration == options.term_iteration
