@@ -1,0 +1,22 @@
+[project]
+name = "partdiff"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "cython>=3.2.3",
+    "partdiff-common",
+]
+
+[tool.uv.sources]
+partdiff-common = { path = "../partdiff_common" }
+
+[build-system]
+requires = [
+    "setuptools>=68",
+    "wheel",
+    "cython>=3.2.3",
+    "numpy"
+]
+build-backend = "setuptools.build_meta"
