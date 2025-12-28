@@ -23,10 +23,10 @@ from partdiff_common import (
     CalculationResults,
 )
 
-cdef int METH_GAUSS_SEIDEL = CalculationMethod.GAUSS_SEIDEL.value
-cdef int METH_JACOBI = CalculationMethod.JACOBI.value
-cdef int TERM_ACC = TerminationCondition.ACCURACY.value
-cdef int TERM_ITER = TerminationCondition.ITERATIONS.value
+cdef int METHOD_GAUSS_SEIDEL = CalculationMethod.GAUSS_SEIDEL.value
+cdef int METHOD_JACOBI = CalculationMethod.JACOBI.value
+cdef int TERMINATION_ACCURACY = TerminationCondition.ACCURACY.value
+cdef int TERMINATION_ITERATIONS = TerminationCondition.ITERATIONS.value
 
 cdef tuple calculate_inner(
     int method,
@@ -38,37 +38,44 @@ cdef tuple calculate_inner(
     double[:, :] perturbation_matrix,
 ):
     cdef int i, j
-    cdef int m1, m2
     cdef double star, residuum, maxresiduum
     cdef int stat_iteration = 0
     cdef double stat_accuracy = 0.0
-    (m1, m2) = (0, 1) if method == METH_JACOBI else (0, 0)
-    while term_iteration > 0:
+    cdef double[:, :] matrix_out = tensor[0, :, :]
+    cdef double[:, :] matrix_in = matrix_out
+    cdef double[:, :] final_matrix
+    if method == METHOD_JACOBI:
+        matrix_in = tensor[1, :, :]
+    while True:
+        stat_iteration += 1
         maxresiduum = 0.0
         for i in range(1, n):
             for j in range(1, n):
                 star = 0.25 * (
-                    tensor[m2, i - 1, j] + 
-                    tensor[m2, i, j - 1] +
-                    tensor[m2, i, j + 1] +
-                    tensor[m2, i + 1, j]
+                    matrix_in[i - 1, j] + 
+                    matrix_in[i, j - 1] +
+                    matrix_in[i, j + 1] +
+                    matrix_in[i + 1, j]
                 )
                 star += perturbation_matrix[i, j]
-                if termination == TERM_ACC or term_iteration == 1:
-                    residuum = tensor[m2, i, j] - star
-                    residuum = fabs(residuum)
+                if (
+                    termination == TERMINATION_ACCURACY
+                    or term_iteration == stat_iteration
+                ):
+                    residuum = fabs(matrix_in[i, j] - star)
                     if residuum > maxresiduum:
                         maxresiduum = residuum
-                tensor[m1, i, j] = star
-        stat_iteration += 1
+                matrix_out[i, j] = star
         stat_accuracy = maxresiduum
-        (m1, m2) = (m2, m1)
-        if termination == TERM_ACC:
+        matrix_in, matrix_out = matrix_out, matrix_in
+        if termination == TERMINATION_ACCURACY:
             if maxresiduum < term_accuracy:
-                term_iteration = 0
-        elif termination == TERM_ITER:
-            term_iteration -= 1
-    return m2, stat_iteration, stat_accuracy
+                break
+        else:
+            if stat_iteration == term_iteration:
+                break
+    final_matrix = matrix_in
+    return final_matrix, stat_iteration, stat_accuracy
 
 def calculate(arguments: CalculationArguments, options: Options) -> CalculationResults:
     cdef int method = options.method.value
@@ -79,7 +86,7 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     cdef double[:, :, :] tensor = arguments.tensor
     cdef double[:, :] perturbation_matrix = arguments.perturbation_matrix
     start_time = time()
-    m, stat_iteration, stat_accuracy = calculate_inner(
+    final_matrix, stat_iteration, stat_accuracy = calculate_inner(
         method,
         termination,
         term_iteration,
@@ -90,5 +97,4 @@ def calculate(arguments: CalculationArguments, options: Options) -> CalculationR
     )
     end_time = time()
     duration = end_time - start_time
-    final_matrix = arguments.tensor[m, :, :]
     return CalculationResults(final_matrix, stat_iteration, stat_accuracy, duration)
