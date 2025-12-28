@@ -48,7 +48,8 @@ def main():
 
     def runtime_factor(method, runtime, time_type):
         res = ufloat(*runtime) / extract_baseline_runtime(df, method, time_type)
-        return res.n  # [res.n, res.s]
+        # return res.n
+        return [res.n, res.s]
 
     df = df.with_columns(
         pl.struct(["method", "runtime_internal"])
@@ -56,35 +57,40 @@ def main():
             lambda x: runtime_factor(
                 x["method"], x["runtime_internal"], "runtime_internal"
             ),
-            return_dtype=pl.Float64(),
-            # return_dtype=pl.List(pl.Float64()),
+            # return_dtype=pl.Float64(),
+            return_dtype=pl.List(pl.Float64()),
         )
         .alias("runtime_internal_factor"),
         pl.struct(["method", "runtime_total"])
         .map_elements(
             lambda x: runtime_factor(x["method"], x["runtime_total"], "runtime_total"),
-            return_dtype=pl.Float64(),
-            # return_dtype=pl.List(pl.Float64()),
+            # return_dtype=pl.Float64(),
+            return_dtype=pl.List(pl.Float64()),
         )
         .alias("runtime_total_factor"),
     )
 
-    def format_ufloat_runtime(x) -> str:
+    def format_ufloat_from_list(x, unit: str = None) -> str:
         x = ufloat(*x)
-        return "({:.4f} ± {:.4f}) s".format(x.n, x.s)
+        s = "({:.4f} ± {:.4f})".format(x.n, x.s)
+        if unit is not None:
+            s += f" {unit}"
+        return s
+    
+    
 
     df = df.with_columns(
         pl.col("runtime_internal").map_elements(
-            lambda x: format_ufloat_runtime(x), return_dtype=pl.String()
+            lambda x: format_ufloat_from_list(x, "s"), return_dtype=pl.String()
         ),
         pl.col("runtime_total").map_elements(
-            lambda x: format_ufloat_runtime(x), return_dtype=pl.String()
+            lambda x: format_ufloat_from_list(x, "s"), return_dtype=pl.String()
         ),
         pl.col("runtime_internal_factor").map_elements(
-            lambda x: f"{x:.4f}", return_dtype=pl.String()
+            lambda x: format_ufloat_from_list(x), return_dtype=pl.String()
         ),
         pl.col("runtime_total_factor").map_elements(
-            lambda x: f"{x:.4f}", return_dtype=pl.String()
+            lambda x: format_ufloat_from_list(x), return_dtype=pl.String()
         ),
     )
 
