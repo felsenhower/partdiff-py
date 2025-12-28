@@ -7,7 +7,7 @@ extensions = [
         "calculate",
         ["calculate.pyx"],
         include_dirs=[np.get_include()],
-        extra_compile_args=["-O3", "-march=native", "-ffast-math"],
+        extra_compile_args=["-O3", "-march=native"],
     )
 ]
 

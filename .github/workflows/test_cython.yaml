@@ -30,5 +30,4 @@ jobs:
             --executable='uv run main.py' \
             --cwd='../cython' \
             --strictness=4 \
-            --shuffle=42 \
-            --filter='o:{"lines": "0"}'
+            --shuffle=42
