@@ -22,6 +22,7 @@ jobs:
 
       - name: Build with Nuitka # Workaround
         run: |
+          cd nuitka && \
           uv export --no-hashes -o requirements.txt && \
           python -m venv .venv && \
           source .venv/bin/activate && \
