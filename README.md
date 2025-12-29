@@ -33,7 +33,7 @@ Since the performance of some variants (especially `simple`) is not great, we ru
 See the table below for a runtime comparison of the variants that has been created with the scripts inside the `benchmark` directory. The C reference implementation serves as a comparison.
 
 > [!TIP]
-> If the table is hard to read on the landing page, you might wanna read the README directly here: [click](README.md)
+> If the table is hard to read on the landing page, you might wanna read the README directly here: [click](README.md#performance)
 
 | variant      | method      | runtime (internal)   | factor              | runtime (total)      | factor              |
 |--------------|-------------|----------------------|---------------------|----------------------|---------------------|
