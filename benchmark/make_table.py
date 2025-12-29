@@ -104,7 +104,7 @@ def main():
     df.columns = (
         "variant",
         "method",
-        "runtime (internal)",
+        "runtime (calculate)",
         "factor1",
         "runtime (total)",
         "factor2",

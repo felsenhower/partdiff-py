@@ -35,7 +35,7 @@ See the table below for a runtime comparison of the variants that has been creat
 > [!TIP]
 > If the table is hard to read on the landing page, you might wanna read the README directly here: [click](README.md#performance)
 
-| variant      | method      | runtime (internal)   | factor              | runtime (total)      | factor              |
+| variant      | method      | runtime (calculate)  | factor              | runtime (total)      | factor              |
 |--------------|-------------|----------------------|---------------------|----------------------|---------------------|
 | reference    | Gauß-Seidel | (0.5626 ± 0.0063) s  | (1.0000 ± 0.0159)   | (0.5640 ± 0.0061) s  | (1.0000 ± 0.0154)   |
 | reference    | Jacobi      | (0.4921 ± 0.0032) s  | (1.0000 ± 0.0091)   | (0.4939 ± 0.0031) s  | (1.0000 ± 0.0089)   |
@@ -52,7 +52,7 @@ See the table below for a runtime comparison of the variants that has been creat
 
 For all benchmarks, the arguments `1 {1,2} 100 2 2 100` were used. Therefore, this only serves to give you a rough overview.
 
-`runtime_internal` shows the runtime that partdiff measured itself (the `Calculation time` field in the output) and `runtime_total` shows the runtime measured via `time.perf_counter()`.
+`runtime (calculate)` shows the runtime that partdiff measured itself (the `Calculation time` field in the output) and `runtime (total)` shows the runtime measured via `time.perf_counter()`.
 
 All Python implementations below have a larger runtime in total than the reference implementation.
 Since all of the startup code (arg-parsing, matrix initialization) is written in a pythonic and straightforward way, this is not surprising.
