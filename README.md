@@ -32,6 +32,24 @@ Since the performance of some variants (especially `simple`) is not great, we ru
 
 See the table below for a runtime comparison of the variants that has been created with the scripts inside the `benchmark` directory. The C reference implementation serves as a comparison.
 
+> [!TIP]
+> If the table is hard to read on the landing page, you might wanna read the README directly here: [click](README.md)
+
+| variant      | method      | runtime (internal)   | factor              | runtime (total)      | factor              |
+|--------------|-------------|----------------------|---------------------|----------------------|---------------------|
+| reference    | Gauß-Seidel | (0.5626 ± 0.0063) s  | (1.0000 ± 0.0159)   | (0.5640 ± 0.0061) s  | (1.0000 ± 0.0154)   |
+| reference    | Jacobi      | (0.4921 ± 0.0032) s  | (1.0000 ± 0.0091)   | (0.4939 ± 0.0031) s  | (1.0000 ± 0.0089)   |
+| simple       | Gauß-Seidel | (58.9728 ± 0.0725) s | (104.8218 ± 1.1836) | (59.1671 ± 0.0721) s | (104.9124 ± 1.1500) |
+| simple       | Jacobi      | (59.9409 ± 0.2698) s | (121.7980 ± 0.9576) | (60.1439 ± 0.2765) s | (121.7734 ± 0.9513) |
+| nuitka       | Gauß-Seidel | (56.1754 ± 0.7793) s | (99.8496 ± 1.7818)  | (56.3520 ± 0.7951) s | (99.9208 ± 1.7811)  |
+| nuitka       | Jacobi      | (58.2192 ± 1.7328) s | (118.2996 ± 3.6026) | (58.3895 ± 1.7231) s | (118.2213 ± 3.5678) |
+| np_vectorize | Gauß-Seidel | (60.2394 ± 1.2457) s | (107.0732 ± 2.5194) | (60.4389 ± 1.2378) s | (107.1674 ± 2.4860) |
+| np_vectorize | Jacobi      | (0.3656 ± 0.0018) s  | (0.7429 ± 0.0060)   | (0.5601 ± 0.0025) s  | (1.1340 ± 0.0088)   |
+| numba        | Gauß-Seidel | (1.1685 ± 0.0039) s  | (2.0770 ± 0.0243)   | (1.5011 ± 0.0153) s  | (2.6617 ± 0.0397)   |
+| numba        | Jacobi      | (1.1692 ± 0.0116) s  | (2.3758 ± 0.0281)   | (1.5184 ± 0.0254) s  | (3.0743 ± 0.0549)   |
+| cython       | Gauß-Seidel | (0.5207 ± 0.0086) s  | (0.9256 ± 0.0185)   | (0.7169 ± 0.0094) s  | (1.2712 ± 0.0217)   |
+| cython       | Jacobi      | (0.5208 ± 0.0077) s  | (1.0583 ± 0.0171)   | (0.7197 ± 0.0160) s  | (1.4571 ± 0.0337)   |
+
 For all benchmarks, the arguments `1 {1,2} 100 2 2 100` were used. Therefore, this only serves to give you a rough overview.
 
 `runtime_internal` shows the runtime that partdiff measured itself (the `Calculation time` field in the output) and `runtime_total` shows the runtime measured via `time.perf_counter()`.
@@ -51,20 +69,7 @@ The `numba` variant performs a bit worse than the reference implementation, the 
 
 Finally, the performance of the `cython` variant is nearly identical to the reference implementation. Also not surprising, since the Cython code is an almost straight port of the C code, and Cython then translates that back to C and compiles it with exactly the same optimizations that the C version uses by default.
 
-| variant      | method      | runtime_internal     |                         | runtime_total        |                      |
-|--------------|-------------|----------------------|-------------------------|----------------------|----------------------|
-| reference    | Gauß-Seidel | (0.5626 ± 0.0063) s  | (1.0000 ± 0.0159)       | (0.5640 ± 0.0061) s  | (1.0000 ± 0.0154)    |
-| reference    | Jacobi      | (0.4921 ± 0.0032) s  | (1.0000 ± 0.0091)       | (0.4939 ± 0.0031) s  | (1.0000 ± 0.0089)    |
-| simple       | Gauß-Seidel | (58.9728 ± 0.0725) s | (104.8218 ± 1.1836)     | (59.1671 ± 0.0721) s | (104.9124 ± 1.1500)  |
-| simple       | Jacobi      | (59.9409 ± 0.2698) s | (121.7980 ± 0.9576)     | (60.1439 ± 0.2765) s | (121.7734 ± 0.9513)  |
-| nuitka       | Gauß-Seidel | (56.1754 ± 0.7793) s | (99.8496 ± 1.7818)      | (56.3520 ± 0.7951) s | (99.9208 ± 1.7811)   |
-| nuitka       | Jacobi      | (58.2192 ± 1.7328) s | (118.2996 ± 3.6026)     | (58.3895 ± 1.7231) s | (118.2213 ± 3.5678)  |
-| np_vectorize | Gauß-Seidel | (60.2394 ± 1.2457) s | (107.0732 ± 2.5194)     | (60.4389 ± 1.2378) s | (107.1674 ± 2.4860)  |
-| np_vectorize | Jacobi      | (0.3656 ± 0.0018) s  | (0.7429 ± 0.0060)       | (0.5601 ± 0.0025) s  | (1.1340 ± 0.0088)    |
-| numba        | Gauß-Seidel | (1.1685 ± 0.0039) s  | (2.0770 ± 0.0243)       | (1.5011 ± 0.0153) s  | (2.6617 ± 0.0397)    |
-| numba        | Jacobi      | (1.1692 ± 0.0116) s  | (2.3758 ± 0.0281)       | (1.5184 ± 0.0254) s  | (3.0743 ± 0.0549)    |
-| cython       | Gauß-Seidel | (0.5207 ± 0.0086) s  | (0.9256 ± 0.0185)       | (0.7169 ± 0.0094) s  | (1.2712 ± 0.0217)    |
-| cython       | Jacobi      | (0.5208 ± 0.0077) s  | (1.0583 ± 0.0171)       | (0.7197 ± 0.0160) s  | (1.4571 ± 0.0337)    |
+
 
 ## Conclusion
 

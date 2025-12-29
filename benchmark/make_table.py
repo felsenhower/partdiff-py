@@ -76,8 +76,6 @@ def main():
         if unit is not None:
             s += f" {unit}"
         return s
-    
-    
 
     df = df.with_columns(
         pl.col("runtime_internal").map_elements(
@@ -103,6 +101,15 @@ def main():
         pl.col("runtime_total_factor"),
     )
 
+    df.columns = (
+        "variant",
+        "method",
+        "runtime (internal)",
+        "factor1",
+        "runtime (total)",
+        "factor2",
+    )
+
     with pl.Config(
         tbl_formatting="MARKDOWN",
         tbl_hide_column_data_types=True,
@@ -110,8 +117,9 @@ def main():
         tbl_rows=-1,
     ):
         s = str(df)
-        for col in ("runtime_internal_factor", "runtime_total_factor"):
-            s = s.replace(col, " " * len(col))
+
+        for col in ("factor1", "factor2"):
+            s = s.replace(col, "{:{}s}".format("factor", len(col)))
         print(s)
 
 

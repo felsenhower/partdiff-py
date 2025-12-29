@@ -13,6 +13,7 @@ NUM_REPETITIONS = 3
 
 OUTPUT_FILE = Path("benchmark_results.csv").resolve()
 
+
 @dataclass(frozen=True)
 class Variant:
     path: Path
