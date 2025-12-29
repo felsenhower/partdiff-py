@@ -12,7 +12,7 @@ $ uv run main.py 1 2 100 1 2 5
 
 ## Variants
 
-The repository contains three variants:
+The repository contains multiple variants:
 - `simple`: An intentionally naïve and straightforward implementation (simple but slow)
 - `np_vectorize`: An implementation that uses numpy's fast factorized math for the Jacobi method. For the Gauß-Seidel method, this is not possible[^1], so we're only having some minor simplifications here.
 - `numba`: An implementation where the main loop has been JIT-compiled with numba.
