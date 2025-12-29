@@ -14,7 +14,7 @@ $ uv run main.py 1 2 100 1 2 5
 
 The repository contains multiple variants:
 - `simple`: An intentionally naïve and straightforward implementation (simple but slow)
-- `np_vectorize`: An implementation that uses numpy's fast factorized math for the Jacobi method. For the Gauß-Seidel method, this is not possible[^1], so we're only having some minor simplifications here.
+- `np_vectorize`: An implementation that uses numpy's fast vectorized math for the Jacobi method. For the Gauß-Seidel method, this is not possible[^1], so we're only having some minor simplifications here.
 - `numba`: An implementation where the main loop has been JIT-compiled with numba.
 - `cython`: An implementation where the `calculate()` function has been rewritten in `Cython` and is effectively used as an external C module.
 - `nuitka`: An implementation that uses Nuitka to compile the Python code into a single binary.
@@ -63,7 +63,7 @@ As expected, the naïve implementation (`simple`) performs very badly. Here, the
 The `nuitka` variant is _slightly_ faster than the `simple` variant (looking at the standard deviation, take that with a grain of salt).
 
 For the Gauß-Seidel method, the `np_vectorize` variant is about as fast as the `simple` variant which is not surprising since the `calculate_gauss_seidel()` method is nearly identical to the standard `calculate` method and only contains some obvious tweaks (e.g. no matrix swapping).
-However, for the Jacobi method, the `np_vectorize` variant is even faster than the reference implementation (about 25% faster). This is thanks to numpy's optimized vectorized math while the reference implementation does not use vectorization. The perturbation matrix is also precomputed once inside the `calculate()` method instead of all the values being recomputed for each element (caching the matrix _does_ make sense in general, but since the reference implementation doesn't do it, we're also not doing it as long as it's not necessary).
+However, for the Jacobi method, the `np_vectorize` variant is even faster than the reference implementation (about 25% faster). This is thanks to numpy's vectorized math while the reference implementation does not use vectorization. The perturbation matrix is also precomputed once inside the `calculate()` method instead of all the values being recomputed for each element (caching the matrix _does_ make sense in general, but since the reference implementation doesn't do it, we're also not doing it as long as it's not necessary).
 
 The `numba` variant performs a bit worse than the reference implementation, the reference implementation being about 2x faster.
 
