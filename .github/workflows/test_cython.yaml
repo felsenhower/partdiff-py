@@ -24,7 +24,7 @@ jobs:
         uses: parcio/partdiff_tester@v0.1.9
         with:
           executable: "uv run main.py"
-          cwd: "../cython"
+          cwd: "./cython"
           strictness: "4"
           shuffle: "42"
           max_num_tests: "5"

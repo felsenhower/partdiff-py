@@ -25,7 +25,7 @@ jobs:
         uses: parcio/partdiff_tester@v0.1.9
         with:
           executable: "uv run main.py"
-          cwd: "../nuitka"
+          cwd: "./nuitka"
           strictness: "4"
           shuffle: "42"
           filter: '[
