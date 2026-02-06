@@ -20,14 +20,10 @@ jobs:
       - name: Set up Python
         run: uv python install
 
-      - name: Clone partdiff_tester
-        run: git clone https://github.com/parcio/partdiff_tester.git
-
       - name: Run correctness check
-        run: |
-          cd partdiff_tester && \
-          uv run pytest -n auto --verbose \
-            --executable='uv run main.py' \
-            --cwd='../numba' \
-            --strictness=4 \
-            --shuffle=42
+        uses: parcio/partdiff_tester@v0.1.8
+        with:
+          executable: "uv run main.py"
+          cwd: "../cython"
+          strictness: "4"
+          shuffle: "42"

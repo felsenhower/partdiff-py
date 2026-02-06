@@ -28,16 +28,14 @@ jobs:
           source .venv/bin/activate && \
           pip install -r requirements.txt && \
           nuitka --output-filename=partdiff main.py
-        
-      - name: Clone partdiff_tester
-        run: git clone https://github.com/parcio/partdiff_tester.git
 
       - name: Run correctness check
-        run: |
-          cd partdiff_tester && \
-          uv run pytest -n auto --verbose \
-            --executable='./partdiff' \
-            --cwd='../nuitka' \
-            --strictness=4 \
-            --shuffle=42 \
-            --filter='o:{"lines": "0"}'
+        uses: parcio/partdiff_tester@v0.1.8
+        with:
+          executable: "uv run main.py"
+          cwd: "../nuitka"
+          strictness: "4"
+          shuffle: "42"
+          filter: '[
+            "o:{\"lines\": \"0\"}"
+          ]'
