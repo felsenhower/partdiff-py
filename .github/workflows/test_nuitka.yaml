@@ -37,4 +37,4 @@ jobs:
           strictness: "4"
           shuffle: "42"
           filter: |
-            o:{"lines": "0"}
+            o:{\"lines\": \"0\"}
