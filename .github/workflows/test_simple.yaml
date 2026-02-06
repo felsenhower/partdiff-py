@@ -22,7 +22,7 @@ jobs:
 
 
       - name: Run correctness check
-        uses: parcio/partdiff_tester@v0.1.8
+        uses: parcio/partdiff_tester@v0.1.9
         with:
           executable: "uv run main.py"
           cwd: "../nuitka"
