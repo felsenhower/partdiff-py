@@ -21,12 +21,11 @@ jobs:
         run: uv python install
 
       - name: Run correctness check
-        uses: parcio/partdiff_tester@v0.1.9
+        uses: parcio/partdiff_tester@v0.1.10
         with:
           executable: "uv run main.py"
           cwd: "./np_vectorize"
           strictness: "4"
           shuffle: "42"
-          filter: '[
-            "r:(\w+ 1 0 \w+ \w+ \w+)|(\w+ 2 \w+ \w+ \w+ \w+)"
-          ]'
+          filter: |
+            r:(\w+ 1 0 \w+ \w+ \w+)|(\w+ 2 \w+ \w+ \w+ \w+)

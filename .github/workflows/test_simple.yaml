@@ -22,12 +22,11 @@ jobs:
 
 
       - name: Run correctness check
-        uses: parcio/partdiff_tester@v0.1.9
+        uses: parcio/partdiff_tester@v0.1.10
         with:
           executable: "uv run main.py"
           cwd: "./nuitka"
           strictness: "4"
           shuffle: "42"
-          filter: '[
-            "o:{\"lines\": \"0\"}"
-          ]'
+          filter: |
+            o:{"lines": "0"}
